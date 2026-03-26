@@ -34,7 +34,7 @@ public class AuthController {
         AppUser user = new AppUser();
         user.setUsername(request.getUsername());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setRole(request.getRole() != null ? request.getRole() : Role.ROLE_CUSTOMER);
+        user.setRole(request.getRole() != null ? request.getRole() : Role.ROLE_GUEST);
         userRepository.save(user);
         return ResponseEntity.status(HttpStatus.CREATED).body("User registered successfully");
     }

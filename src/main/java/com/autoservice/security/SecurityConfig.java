@@ -32,61 +32,50 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(AbstractHttpConfigurer::disable)
-            .sessionManagement(session ->
-                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .exceptionHandling(ex -> ex
-                // Возвращаем 401 (а не 403) когда токен отсутствует или истёк
-                .authenticationEntryPoint((request, response, authException) -> {
-                    response.setContentType("application/json;charset=UTF-8");
-                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    response.getWriter().write(
-                        "{\"error\":\"Unauthorized\",\"message\":\"Token missing, invalid or expired. Please login again.\"}");
-                })
-            )
-            .authorizeHttpRequests(auth -> auth
-                // --- Публичные ---
-                .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/auth/refresh").permitAll()
+                .csrf(AbstractHttpConfigurer::disable)
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setContentType("application/json;charset=UTF-8");
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.getWriter().write(
+                                    "{\"error\":\"Unauthorized\",\"message\":\"Token missing, invalid or expired. Please login again.\"}");
+                        })
+                )
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/refresh").permitAll()
 
-                // --- Клиенты ---
-                .requestMatchers(HttpMethod.GET, "/api/customers/**").hasAnyRole("ADMIN", "MECHANIC")
-                .requestMatchers("/api/customers/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/reports/**").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers(HttpMethod.GET, "/api/hotels/*/available-rooms").authenticated()
 
-                // --- Автомобили ---
-                .requestMatchers(HttpMethod.GET, "/api/vehicles/**").hasAnyRole("ADMIN", "MECHANIC", "CUSTOMER")
-                .requestMatchers(HttpMethod.POST, "/api/vehicles/**").hasAnyRole("ADMIN", "CUSTOMER")
-                .requestMatchers(HttpMethod.PUT, "/api/vehicles/**").hasAnyRole("ADMIN", "CUSTOMER")
-                .requestMatchers(HttpMethod.DELETE, "/api/vehicles/**").hasRole("ADMIN")
-                .requestMatchers("/api/vehicles/**").hasRole("ADMIN") // catchall: ADMIN всегда имеет доступ
+                        .requestMatchers(HttpMethod.GET, "/api/hotels/**").authenticated()
+                        .requestMatchers("/api/hotels/**").hasAnyRole("ADMIN", "MANAGER")
 
-                // --- Механики ---
-                .requestMatchers(HttpMethod.GET, "/api/mechanics/**").hasAnyRole("ADMIN", "MECHANIC")
-                .requestMatchers("/api/mechanics/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/rooms/**").authenticated()
+                        .requestMatchers("/api/rooms/**").hasAnyRole("ADMIN", "MANAGER")
 
-                // --- Запчасти ---
-                .requestMatchers(HttpMethod.GET, "/api/parts/**").authenticated()
-                .requestMatchers("/api/parts/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/guests/**").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers(HttpMethod.POST, "/api/guests/**").hasAnyRole("ADMIN", "MANAGER", "GUEST")
+                        .requestMatchers(HttpMethod.PUT, "/api/guests/**").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers(HttpMethod.DELETE, "/api/guests/**").hasRole("ADMIN")
 
-                // --- Бизнес-операции (ПЕРЕД общими правилами orders!) ---
-                .requestMatchers("/api/orders/*/auto-assign").hasAnyRole("ADMIN", "MECHANIC")
-                .requestMatchers("/api/orders/*/close").hasAnyRole("ADMIN", "MECHANIC")
-                .requestMatchers("/api/orders/*/cost").hasAnyRole("ADMIN", "MECHANIC", "CUSTOMER")
-                .requestMatchers("/api/reports/**").hasAnyRole("ADMIN", "MECHANIC")
+                        .requestMatchers(HttpMethod.GET, "/api/bookings/**").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/bookings/**").hasAnyRole("ADMIN", "MANAGER", "GUEST")
+                        .requestMatchers(HttpMethod.PUT, "/api/bookings/*/complete").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers(HttpMethod.PUT, "/api/bookings/**").hasAnyRole("ADMIN", "MANAGER", "GUEST")
+                        .requestMatchers(HttpMethod.DELETE, "/api/bookings/**").hasRole("ADMIN")
 
-                // --- Заказ-наряды (общие правила после специфичных) ---
-                .requestMatchers(HttpMethod.GET, "/api/orders/**").authenticated()
-                .requestMatchers(HttpMethod.POST, "/api/orders").hasAnyRole("ADMIN", "CUSTOMER")
-                .requestMatchers(HttpMethod.POST, "/api/orders/**").hasAnyRole("ADMIN", "MECHANIC")
-                .requestMatchers(HttpMethod.PUT, "/api/orders/**").hasAnyRole("ADMIN", "MECHANIC")
-                .requestMatchers(HttpMethod.DELETE, "/api/orders/**").hasRole("ADMIN")
-                .requestMatchers("/api/orders/**").hasRole("ADMIN") // catchall: ADMIN всегда имеет доступ
+                        .requestMatchers(HttpMethod.GET, "/api/payments/**").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers(HttpMethod.POST, "/api/payments/confirm").hasAnyRole("ADMIN", "MANAGER", "GUEST")
+                        .requestMatchers("/api/payments/**").hasAnyRole("ADMIN", "MANAGER")
 
-                .anyRequest().authenticated()
-            )
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-            .authenticationProvider(authenticationProvider());
+                        .anyRequest().authenticated()
+                )
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .authenticationProvider(authenticationProvider());
 
         return http.build();
     }
