@@ -271,6 +271,36 @@
           ]
         },
         {
+          "name": "Update Hotel",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/hotels/{{hotelId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "hotels", "{{hotelId}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Postman Hotel\",\n  \"city\": \"Saint Petersburg\",\n  \"address\": \"Updated Postman Street, 10\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.response.to.have.status(200);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
           "name": "Create Room",
           "request": {
             "method": "POST",
@@ -303,6 +333,36 @@
           ]
         },
         {
+          "name": "Update Room",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/rooms/{{roomId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "rooms", "{{roomId}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"hotelId\": {{hotelId}},\n  \"roomNumber\": \"R{{$timestamp}}-UPD\",\n  \"type\": \"SUITE\",\n  \"capacity\": 3,\n  \"pricePerNight\": 12900,\n  \"active\": true\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.response.to.have.status(200);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
           "name": "Create Guest",
           "request": {
             "method": "POST",
@@ -328,6 +388,36 @@
                   "pm.response.to.have.status(201);",
                   "var json = pm.response.json();",
                   "pm.collectionVariables.set('guestId', json.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Guest",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{guestToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/guests/{{guestId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "guests", "{{guestId}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Updated Postman Guest\",\n  \"email\": \"updated.postman{{$timestamp}}@example.com\",\n  \"phone\": \"+7911{{$timestamp}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.response.to.have.status(200);"
                 ],
                 "type": "text/javascript"
               }
